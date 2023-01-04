@@ -1,0 +1,1 @@
+Handbrake : A, Rts : dpad_Right, Lts : dpad_Left, Upt : dpad_Up, Downt : dpad_Down, Lights : B, Wipper : Y, Start_engine : X, Restart : R1
