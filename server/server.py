@@ -11,6 +11,8 @@ import time
 import socket
 from engineio.async_drivers import gevent
 
+
+
 ip = socket.gethostbyname(socket.gethostname())
 gamepad = vg.VX360Gamepad()
 handbrake = 0
@@ -19,6 +21,7 @@ rts = 0
 upt =0
 downt = 0
 lts = 0 
+thread_stop = 0
 en = 0 
 wipper = 0 
 lights = 0 
@@ -212,6 +215,7 @@ angle_last = 0
 
 @app.route('/push')
 def push_once():
+
 	global gamepad,handbrake,rts,lts,restart,upt,downt,en,wipper,lights
 	angle = request.args.get('angle')
 	gas = request.args.get('gas')
@@ -226,85 +230,92 @@ def push_once():
 	en = request.args.get('en')
 	wipper = request.args.get('wipper')
 	max_angle = request.args.get('max_angle')
-	checked = request.args.get('checked')
+	checked = request.args.get( 'checked')
 	sens = request.args.get('sens')
 	checked = true_false(checked)
 	value_gas = float(request.args.get('valuegas'))
 	value_break = float(request.args.get('valuebreak'))
+	if str(angle) == 'start':
+		txt_1 = open('start.txt',"w")
+		txt_1.write('start')
+		txt_1.close()
+	if str(angle) == 'end':
+		txt_2 = open('start.txt',"w")
+		txt_2.write('end')	
+		txt_2.close()
+	else:	
+		if str(angle) == '':
+			pass
+		else:
+			try:
+				ang = float(angle)
+				max_angle = float(max_angle)
+				if ang == 0.0:
+						ax = 0
+				elif checked == 1:
+					if ang >= 1:
+						ax = round(ang) * ((32767 -  float(sens))/90) + float(sens)
+					elif ang <= -1:
+						ax = round(ang) * ((32768 - float(sens))/89) + (float(sens) * -1)				
+				else:
+					if ang >= 1:
+						ax = round(ang) * (32767/90)
+					elif ang <= -1:
+						ax = round(ang) * (32768/89)
+			except ValueError:
+				print('Error')	
+		gas = true_false(gas)
+		brk = true_false(brk)
+		handbrake = true_false(handbrake)
+		restart = true_false(restart)
+		rts = true_false(rts)
+		lts = true_false(lts)
+		upt = true_false(upt)
+		downt = true_false(downt)
+		lights = true_false(lights)
+		en = true_false(en)
+		wipper = true_false(wipper)	
 
-	if str(angle) == '':
-		pass
-	else:
-		try:
-			ang = float(angle)
-			max_angle = float(max_angle)
-			if ang == 0.0:
-					ax = 0
-			elif checked == 1:
-				if ang >= 1:
-					ax = round(ang) * ((32767 -  float(sens))/90) + float(sens)
-				elif ang <= -1:
-					ax = round(ang) * ((32768 - float(sens))/89) + (float(sens) * -1)				
-			else:
-				if ang >= 1:
-					ax = round(ang) * (32767/90)
-				elif ang <= -1:
-					ax = round(ang) * (32768/89)
-		except ValueError:
-			print('Error')	
+		t_angle = Thread(target = lambda : angle_(ax),args=())
+		t_angle.start()
+		if gas == 1:
+			print('gsa')
+			gamepad.right_trigger_float(value_float=value_gas)
+		if gas == 0:
+			gamepad.right_trigger_float(value_float=0)	
+		if brk == 1:	
+			gamepad.left_trigger_float(value_float=value_break)
+		if brk == 0:
+			gamepad.left_trigger_float(value_float=0)	
+		if handbrake == 1:
+			handbrake_thread = Thread(target = handbrake_btn, args=())
+			start_thread(handbrake_thread)
+		elif restart == 1:
+			restart_thread = Thread(target = restart_btn, args =())
+			start_thread(restart_thread)
+		elif rts == 1:
+			rts_thread = Thread(target = right_turn_signal,args=())
+			start_thread(rts_thread)
+		elif lts == 1:
+			lts_thread = Thread(target = left_turn_signal,args=())
+			start_thread(lts_thread)
+		elif upt == 1:
+			upt_thread = Thread(target = Up_transsmission,args=())
+			start_thread(upt_thread)
+		elif downt == 1:
+			downt_thread = Thread(target = Down_transsmission, args=())
+			start_thread(downt_thread)
+		elif lights == 1:
+			lights_thread = Thread(target = lights_on,args=())
+			start_thread(lights_thread)
+		elif en == 1:
+			en_thread = Thread(target = engine_on,args=())
+			start_thread(en_thread)
+		elif wipper == 1:
+			wipper_thread = Thread(target = wipper_on,args=())	
+			start_thread(wipper_thread)							
 
-	gas = true_false(gas)
-	brk = true_false(brk)
-	handbrake = true_false(handbrake)
-	restart = true_false(restart)
-	rts = true_false(rts)
-	lts = true_false(lts)
-	upt = true_false(upt)
-	downt = true_false(downt)
-	lights = true_false(lights)
-	en = true_false(en)
-	wipper = true_false(wipper)	
-
-	t_angle = Thread(target = lambda : angle_(ax),args=())
-	t_angle.start()
-	if gas == 1:
-		print('gsa')
-		gamepad.right_trigger_float(value_float=value_gas)
-	if gas == 0:
-		gamepad.right_trigger_float(value_float=0)	
-	if brk == 1:	
-		gamepad.left_trigger_float(value_float=value_break)
-	if brk == 0:
-		gamepad.left_trigger_float(value_float=0)	
-	if handbrake == 1:
-		handbrake_thread = Thread(target = handbrake_btn, args=())
-		start_thread(handbrake_thread)
-	elif restart == 1:
-		restart_thread = Thread(target = restart_btn, args =())
-		start_thread(restart_thread)
-	elif rts == 1:
-		rts_thread = Thread(target = right_turn_signal,args=())
-		start_thread(rts_thread)
-	elif lts == 1:
-		lts_thread = Thread(target = left_turn_signal,args=())
-		start_thread(lts_thread)
-	elif upt == 1:
-		upt_thread = Thread(target = Up_transsmission,args=())
-		start_thread(upt_thread)
-	elif downt == 1:
-		downt_thread = Thread(target = Down_transsmission, args=())
-		start_thread(downt_thread)
-	elif lights == 1:
-		lights_thread = Thread(target = lights_on,args=())
-		start_thread(lights_thread)
-	elif en == 1:
-		en_thread = Thread(target = engine_on,args=())
-		start_thread(en_thread)
-	elif wipper == 1:
-		wipper_thread = Thread(target = wipper_on,args=())	
-		start_thread(wipper_thread)							
-
-	gamepad.update()		
+		gamepad.update()		
 	return 'done'
 
 
@@ -318,7 +329,7 @@ def disconnect_msg():
 	print('client disconnected')
 
 def start_socket_thread():
-	global app
+	global app,thread_stop
 	app.run(host=ip,port=8000)
 
 
