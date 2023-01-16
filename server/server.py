@@ -254,14 +254,14 @@ def push_once():
 						ax = 0
 				elif checked == 1:
 					if ang >= 1:
-						ax = round(ang) * ((32767 -  float(sens))/90) + float(sens)
+						ax = round(ang) * ((32767 -  float(sens))/max_angle) + float(sens)
 					elif ang <= -1:
-						ax = round(ang) * ((32768 - float(sens))/89) + (float(sens) * -1)				
+						ax = round(ang) * ((32768 - float(sens))/max_angle) + (float(sens) * -1)				
 				else:
 					if ang >= 1:
-						ax = round(ang) * (32767/90)
+						ax = round(ang) * (32767/max_angle)
 					elif ang <= -1:
-						ax = round(ang) * (32768/89)
+						ax = round(ang) * (32768/(max_angle))
 			except ValueError:
 				print('Error')	
 		gas = true_false(gas)

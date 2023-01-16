@@ -52,8 +52,6 @@ def insert_in_ent():
 	 			lbl.config(text=String)
 	 			one_start = True
 	 			one_end = False
-	 		else:
-	 			print('block A')
 	 	elif(word == 'end' and start_activity == True):
 	 		if one_end == False:
 	 			print('end')
@@ -61,8 +59,6 @@ def insert_in_ent():
 	 			lbl.config(text=String)	
 	 			one_start = False
 	 			one_end = True
-	 		else:
-	 			print('block B')
 	 	txt.close()
 
 def clear_output():
